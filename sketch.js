@@ -7,10 +7,18 @@ var engine, world, backgroundImg;
 var canvas, angle, tower, ground, cannon;
 var balls=[]
 var boats=[]
+var boatAnimation=[]
+var boatSpriteData, boatSpritesheet
+var boatBrokeAnimation=[]
+var boatBrokeSpriteData, boatBrokeSpritesheet
+
 function preload() {
   backgroundImg = loadImage("./assets/background.gif");
   towerImage = loadImage("./assets/tower.png");
-  
+  boatSpriteData =loadJSON("./assets/boat/boat.json");
+  boatSpritesheet =loadImage("./assets/boat/boat.png");
+  boatBrokeSpriteData =loadJSON("./assets/boat/brokenBoat.json");
+  boatBrokeSpritesheet =loadImage("./assets/boat/brokenBoat.png");
 }
 
 function setup() {
@@ -18,11 +26,24 @@ function setup() {
   canvas = createCanvas(1200, 600);
   engine = Engine.create();
   world = engine.world;
+
+  var boatsFrames=boatSpriteData.frames;
+  for (var i = 0; i < boatsFrames.length; i++) {
+    var pos = boatsFrames[i].position;
+    var img = boatSpritesheet.get(pos.x, pos.y, pos.w, pos.h);
+    boatAnimation.push(img);
+  }
+
+  var boatsBrokeFrames=boatBrokeSpriteData.frames;
+  for (var i = 0; i < boatsBrokeFrames.length; i++) {
+    var pos = boatsBrokeFrames[i].position;
+    var img = boatBrokeSpritesheet.get(pos.x, pos.y, pos.w, pos.h);
+    boatBrokeAnimation.push(img);
+  }
   
   var options = {
     isStatic: true
   }
-
   ground = Bodies.rectangle(0, height - 1, width * 2, 1, options);
   World.add(world, ground);
 
@@ -31,8 +52,8 @@ function setup() {
   angleMode(DEGREES)
   angle=15;
   cannon=new Cannon(220,140,170,170,angle);
-  
- 
+
+
 }
 
 function draw() {
@@ -84,14 +105,15 @@ function showBoats() {
     if (boats[boats.length-1]===undefined || boats[boats.length -1].body.position.x<width-300) {
       var positions=[-20,-40,-60,-70];
       position=random(positions);
-      boat=new Boat(width,height-100,170,170,position);
-      boats.push(boat)
+      boat=new Boat(width,height-100,170,170,position,boatAnimation);
+      boats.push(boat);
     }
 
     for(var i=0; i<boats.length;i++){
       if (boats[i]) {
         Matter.Body.setVelocity(boats[i].body,{x:-0.9, y:0})
         boats[i].display()
+        boats[i].animate()
       }
       else{
         boats[i]
@@ -100,8 +122,8 @@ function showBoats() {
     }
   }
   else{
-    boat=new Boat(width-79,height-60,170,170,-80);
-    boats.push(boat)
+    boat=new Boat(width-79,height-60,170,170,-80,boatAnimation);
+    boats.push(boat);
   }
 }
 

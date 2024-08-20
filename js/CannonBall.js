@@ -3,11 +3,17 @@ class CannonBall {
     var options = {
       isStatic: true
     };
-    this.r=30;
-    this.body=Bodies.circle(x, y, this.r, options);
-    this.image=loadImage("./assets/cannonball.png");
-    this.trajectory=[]
+    this.speed = 0.05;
+    this.r =30;
+    this.body = Bodies.circle(x, y, this.r, options);
+    this.image = loadImage("./assets/cannonball.png");
+    this.animation = [this.image]
+    this.trajectory = []
     World.add(world,this.body);
+  }
+  
+  animate(){
+    this.speed += 0.05 
   }
 
   shoot(){
@@ -21,9 +27,13 @@ class CannonBall {
   }
 
   remove(index){
+    this.isSink = true
     Matter.Body.setVelocity(this.body,{
       x:0, y:0
     })
+    this.animation = ballBrokeAnimation
+    this.speed = 0.05;
+    this.r = 150
     setTimeout(() => {
       Matter.World.remove(world,this.body)
       delete balls[index]
@@ -33,11 +43,12 @@ class CannonBall {
 
   display() 
   {
+    var index = floor(this.speed%this.animation.length);
     var angle=this.body.angle; 
     var pos = this.body.position;
     push();
     imageMode(CENTER);
-    image(this.image, pos.x, pos.y, this.r, this.r);
+    image(this.animation[index], pos.x, pos.y, this.r, this.r);
     pop();
     
     if(this.body.velocity.x>0 && pos.x>10) {

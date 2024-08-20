@@ -10,15 +10,33 @@ var boats=[]
 var boatAnimation=[]
 var boatSpriteData, boatSpritesheet
 var boatBrokeAnimation=[]
+var ballSpriteData, ballSpritesheet
+var ballBrokeAnimation=[]
 var boatBrokeSpriteData, boatBrokeSpritesheet
+var isGamerOver = false 
+
 
 function preload() {
   backgroundImg = loadImage("./assets/background.gif");
+
   towerImage = loadImage("./assets/tower.png");
-  boatSpriteData =loadJSON("./assets/boat/boat.json");
-  boatSpritesheet =loadImage("./assets/boat/boat.png");
-  boatBrokeSpriteData =loadJSON("./assets/boat/brokenBoat.json");
-  boatBrokeSpritesheet =loadImage("./assets/boat/brokenBoat.png");
+
+  boatSpriteData = loadJSON("./assets/boat/boat.json");
+  boatSpritesheet = loadImage("./assets/boat/boat.png");
+
+  boatBrokeSpriteData = loadJSON("./assets/boat/brokenBoat.json");
+  boatBrokeSpritesheet = loadImage("./assets/boat/brokenBoat.png");
+
+  ballBrokeSpriteData = loadJSON("./assets/waterSplash/waterSplash.json");
+  ballBrokeSpritesheet = loadImage("./assets/waterSplash/waterSplash.png");
+
+  soundBackGround = loadSound("./assets/background_music.mp3");
+
+  soundCannonExplosion = loadSound("./assets/cannon_explosion.mp3");
+
+  soundCannonWater = loadSound("./assets/cannon_water.mp3");
+
+  soundPirateLaugh = loadSound("./assets/pirate_laugh.mp3");
 }
 
 function setup() {
@@ -40,6 +58,13 @@ function setup() {
     var img = boatBrokeSpritesheet.get(pos.x, pos.y, pos.w, pos.h);
     boatBrokeAnimation.push(img);
   }
+
+  var ballsBrokeFrames=ballBrokeSpriteData.frames;
+  for (var i = 0; i < ballsBrokeFrames.length; i++) {
+    var pos = ballsBrokeFrames[i].position;
+    var img = ballBrokeSpritesheet.get(pos.x, pos.y, pos.w, pos.h);
+    ballBrokeAnimation.push(img);
+  }
   
   var options = {
     isStatic: true
@@ -60,6 +85,10 @@ function draw() {
   image(backgroundImg,0,0,1200,600)
   Engine.update(engine);
 
+  if (!soundBackGround.isPlaying()) {
+    soundBackGround.play();
+    soundBackGround.setVolume(0.05);
+  }
   
   rect(ground.position.x, ground.position.y, width * 2, 1);
   
@@ -80,7 +109,8 @@ function draw() {
 function keyReleased(){
   if (keyCode===32) {
     balls[balls.length-1].shoot();
-    
+    soundCannonExplosion.play()
+    soundCannonExplosion.setVolume(0.2)
   }
 }
 
@@ -95,7 +125,12 @@ function showCannonBalls(ball,i) {
   if (ball){
     ball.display()
     if (ball.body.position.x>=width || ball.body.position.y>=height-50) {
-      ball.remove(i)
+      if (!ball.isSink) {
+        //o som estourado é proprosital
+        soundCannonWater.play()
+        soundCannonWater.setVolume(0.1)
+        ball.remove(i)
+      }
     }
   }
 }
@@ -114,6 +149,11 @@ function showBoats() {
         Matter.Body.setVelocity(boats[i].body,{x:-0.9, y:0})
         boats[i].display()
         boats[i].animate()
+        var collision = Matter.SAT.collides(tower,boats[i].body) 
+        if (collision.collided && !boats[i].isBroken) {
+        isGameOver = true 
+        gameOver()
+        }
       }
       else{
         boats[i]
@@ -138,4 +178,20 @@ function colisionWithBoats(index) {
       }
     }
   }
+}
+
+function gameOver() {
+  swal({
+    title: "Game Over",
+    text: "Thanks for gaming",
+    imageUrl: "https://raw.githubusercontent.com/whitehatjr/PiratesInvasion/main/assets/boat.png",
+    imageSize: "150x150",
+    confirmButtonText: "Reload",
+  },
+function (isConfirm) {
+  if(isConfirm){
+    location.reload()
+  }
+})
+
 }
